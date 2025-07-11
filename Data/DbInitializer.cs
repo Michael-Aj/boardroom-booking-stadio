@@ -31,7 +31,12 @@ public class DbInitializer(
         {
             admin = new ApplicationUser { UserName = email, Email = email, EmailConfirmed = true };
             var res = await users.CreateAsync(admin, pass);
-            if (!res.Succeeded) throw new Exception(string.Join("; ", res.Errors));
+            //if (!res.Succeeded) throw new Exception(string.Join("; ", res.Errors));
+            if (!res.Succeeded)
+            {
+                var details = string.Join("; ", res.Errors.Select(e => e.Description));
+                throw new Exception(details);
+            }
         }
         if (!await users.IsInRoleAsync(admin, adminRole))
             await users.AddToRoleAsync(admin, adminRole);

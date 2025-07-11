@@ -74,14 +74,14 @@ using (var scope = app.Services.CreateScope())
     if (!await roleMgr.RoleExistsAsync("Admin"))
         await roleMgr.CreateAsync(new IdentityRole("Admin"));
 
-    var admin = await userMgr.FindByEmailAsync("admin@stadio.local");
-    if (admin is null)
-    {
-        admin = new ApplicationUser { UserName = "admin@stadio.local", Email = "admin@stadio.local" };
-        var result = await userMgr.CreateAsync(admin, adminPw);
-        if (!result.Succeeded) throw new Exception(string.Join(';', result.Errors.Select(e => e.Description)));
-        await userMgr.AddToRoleAsync(admin, "Admin");
-    }
+    //var admin = await userMgr.FindByEmailAsync("admin@stadio.local");
+    //if (admin is null)
+    //{
+    //    admin = new ApplicationUser { UserName = "admin@stadio.local", Email = "admin@stadio.local" };
+    //    var result = await userMgr.CreateAsync(admin, adminPw);
+    //    if (!result.Succeeded) throw new Exception(string.Join(';', result.Errors.Select(e => e.Description)));
+    //    await userMgr.AddToRoleAsync(admin, "Admin");
+    //}
 }
 
 // ——————————————————————————————
