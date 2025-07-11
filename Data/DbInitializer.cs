@@ -19,27 +19,27 @@ public class DbInitializer(
         if (!await roles.RoleExistsAsync(adminRole))
             await roles.CreateAsync(new IdentityRole(adminRole));
 
-        // ---- Admin user ----------------------------
-        //var email = cfg["Admin:User"]!;
-        //var pass = cfg["Admin:Pass"]!;
-        var email = cfg["Admin:User"] ?? throw new InvalidOperationException("Admin:User missing");
-        var pass = cfg["Admin:Pass"] ?? throw new InvalidOperationException("Admin:Pass missing");
+        //// ---- Admin user ----------------------------
+        ////var email = cfg["Admin:User"]!;
+        ////var pass = cfg["Admin:Pass"]!;
+        //var email = cfg["Admin:User"] ?? throw new InvalidOperationException("Admin:User missing");
+        //var pass = cfg["Admin:Pass"] ?? throw new InvalidOperationException("Admin:Pass missing");
 
-        var admin = await users.Users.FirstOrDefaultAsync(u => u.Email == email);
+        //var admin = await users.Users.FirstOrDefaultAsync(u => u.Email == email);
 
-        if (admin is null)
-        {
-            admin = new ApplicationUser { UserName = email, Email = email, EmailConfirmed = true };
-            var res = await users.CreateAsync(admin, pass);
-            //if (!res.Succeeded) throw new Exception(string.Join("; ", res.Errors));
-            if (!res.Succeeded)
-            {
-                var details = string.Join("; ", res.Errors.Select(e => e.Description));
-                throw new Exception(details);
-            }
-        }
-        if (!await users.IsInRoleAsync(admin, adminRole))
-            await users.AddToRoleAsync(admin, adminRole);
+        //if (admin is null)
+        //{
+        //    admin = new ApplicationUser { UserName = email, Email = email, EmailConfirmed = true };
+        //    var res = await users.CreateAsync(admin, pass);
+        //    //if (!res.Succeeded) throw new Exception(string.Join("; ", res.Errors));
+        //    if (!res.Succeeded)
+        //    {
+        //        var details = string.Join("; ", res.Errors.Select(e => e.Description));
+        //        throw new Exception(details);
+        //    }
+        //}
+        //if (!await users.IsInRoleAsync(admin, adminRole))
+        //    await users.AddToRoleAsync(admin, adminRole);
 
         // ---- sample data ---------------------------
         if (!await db.Venues.AnyAsync())
