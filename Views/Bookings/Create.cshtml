@@ -1,0 +1,94 @@
+﻿@model BoardroomBooking4.Models.Booking
+@using BoardroomBooking4.Models
+@inject Microsoft.AspNetCore.Mvc.Rendering.IHtmlHelper Html
+@{
+    ViewData["Title"] = "New Booking";
+    var venues = (IEnumerable<Venue>)ViewData["Venues"]!;
+}
+
+<!-- ─── Header ───────────────────────────────────────────────────── -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 m-0">
+        <i class="bi bi-calendar-plus-fill text-primary me-2"></i>@ViewData["Title"]
+    </h1>
+    <a asp-action="Index" class="btn btn-outline-secondary rounded-pill">
+        <i class="bi bi-arrow-left"></i> Back
+    </a>
+</div>
+
+<!-- ─── Form card ────────────────────────────────────────────────── -->
+<form asp-action="Create" method="post" class="card border-0 shadow-sm rounded-4">
+    <div class="card-body p-4">
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+        <div class="row g-4">
+
+            <!-- Venue ------------------------------------------------>
+            <div class="col-lg-6">
+                <label asp-for="VenueId" class="form-label fw-semibold">Venue</label>
+                <select asp-for="VenueId"
+                        asp-items="@(new SelectList(venues, nameof(Venue.Id), nameof(Venue.Name)))"
+                        class="form-select rounded-pill py-2">
+                    <option value="">-- choose venue --</option>
+                </select>
+                <span asp-validation-for="VenueId" class="text-danger small"></span>
+            </div>
+
+            <!-- Title ----------------------------------------------->
+            <div class="col-lg-6">
+                <label asp-for="Title" class="form-label fw-semibold"></label>
+                <input asp-for="Title" class="form-control rounded-pill py-2" placeholder="Marketing strategy session" />
+                <span asp-validation-for="Title" class="text-danger small"></span>
+            </div>
+
+            <!-- Start / End ----------------------------------------->
+            <div class="col-md-6">
+                <label asp-for="StartUtc" class="form-label fw-semibold">Start&nbsp;(local-time)</label>
+
+                <div class="input-group rounded-pill">
+                    <span class="input-group-text"><i class="bi bi-clock"></i></span>
+                    <input asp-for="StartUtc" type="datetime-local" class="form-control border-start-0" />
+                </div>
+                <span asp-validation-for="StartUtc" class="text-danger small"></span>
+            </div>
+
+            <div class="col-md-6">
+                <label asp-for="EndUtc" class="form-label fw-semibold">End&nbsp;(local-time)</label>
+
+                <div class="input-group rounded-pill">
+                    <span class="input-group-text"><i class="bi bi-clock-history"></i></span>
+                    <input asp-for="EndUtc" type="datetime-local" class="form-control border-start-0" />
+                </div>
+                <span asp-validation-for="EndUtc" class="text-danger small"></span>
+            </div>
+
+            <!-- Description ----------------------------------------->
+            <div class="col-12">
+                <label asp-for="Description" class="form-label fw-semibold"></label>
+                <textarea asp-for="Description" rows="3" class="form-control rounded-4"
+                          placeholder="Optional agenda or notes"></textarea>
+                <span asp-validation-for="Description" class="text-danger small"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer buttons --------------------------------------------->
+    <div class="card-footer bg-white border-0 p-4 text-end">
+        <button class="btn btn-primary rounded-pill px-4">
+            <i class="bi bi-save me-1"></i>Save
+        </button>
+        <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4 ms-2">Cancel</a>
+    </div>
+
+    <partial name="_ValidationScriptsPartial" />
+</form>
+
+@section Scripts {
+    <style>
+        /* subtle anim hover */
+        .card:hover {
+            transform: translateY(-2px);
+            transition: .2s ease;
+        }
+    </style>
+}

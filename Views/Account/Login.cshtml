@@ -1,0 +1,54 @@
+﻿@model BoardroomBooking4.ViewModels.LoginVm
+@{
+    ViewData["Title"] = "Admin Login";
+}
+
+<!-- ─── centred wrapper ────────────────────────────────────────── -->
+<div class="d-flex justify-content-center align-items-center" style="min-height:70vh">
+    <div class="card shadow-lg border-0 rounded-4" style="max-width:420px; width:100%">
+        <div class="card-header bg-primary text-white text-center rounded-top-4">
+            <h1 class="h4 mb-0">
+                <i class="bi bi-shield-lock me-2"></i>
+                Admin&nbsp;Login
+            </h1>
+        </div>
+
+        <form asp-action="Login" method="post" class="card-body p-4">
+            <!-- keeps the URL we wanted after sign-in -->
+            <input type="hidden" asp-for="ReturnUrl" />
+
+            <div class="mb-3">
+                <label asp-for="Email" class="form-label"></label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                    <input asp-for="Email" class="form-control" autofocus />
+                </div>
+                <span asp-validation-for="Email" class="text-danger small"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Password" class="form-label"></label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-key"></i></span>
+                    <input asp-for="Password" class="form-control" />
+                </div>
+                <span asp-validation-for="Password" class="text-danger small"></span>
+            </div>
+
+            <div class="form-check mb-4">
+                <input asp-for="Remember" class="form-check-input" />
+                <label asp-for="Remember" class="form-check-label"></label>
+            </div>
+
+            <button class="btn btn-primary w-100 rounded-pill py-2">
+                <i class="bi bi-box-arrow-in-right me-1"></i>
+                Sign&nbsp;in
+            </button>
+        </form>
+    </div>
+</div>
+
+@section Scripts
+{
+    <partial name="_ValidationScriptsPartial" />
+}

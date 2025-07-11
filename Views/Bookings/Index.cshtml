@@ -1,0 +1,125 @@
+﻿@model IEnumerable<BoardroomBooking4.Models.Booking>
+@using BoardroomBooking4.Models
+@{
+    ViewData["Title"] = "Bookings";
+
+    var venues = (IEnumerable<Venue>)ViewData["Venues"]!;
+    int? selected = ViewData["SelectedVenue"] as int?;
+    DateOnly? day = ViewData["SelectedDate"] as DateOnly?;
+}
+
+<!-- ─── Page header ──────────────────────────────────────────────── -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 m-0">
+        <i class="bi bi-calendar-week text-primary me-2"></i>@ViewData["Title"]
+    </h1>
+
+    @if (User.IsInRole("Admin"))
+    {
+        <a asp-action="Create" class="btn btn-primary rounded-pill">
+            <i class="bi bi-plus-circle me-1"></i>New Booking
+        </a>
+    }
+</div>
+
+<!-- ─── Filter toolbar ───────────────────────────────────────────── -->
+<form method="get" class="card shadow-sm border-0 rounded-4 sticky-top mb-4"
+      style="top:70px; z-index:100;">
+    <div class="card-body p-3">
+        <div class="row g-2 align-items-end">
+
+            <!-- Venue select -->
+            <div class="col-lg-5">
+                <label class="form-label fw-semibold mb-1">Venue</label>
+                <select name="venueId" class="form-select rounded-pill py-2">
+                    <option value="">All venues</option>
+                    @foreach (var v in venues)
+                    {
+                        <option value="@v.Id" selected="@(selected == v.Id)">
+                            @v.Name
+                        </option>
+                    }
+                </select>
+            </div>
+
+            <!-- Date picker -->
+            <div class="col-lg-4">
+                <label class="form-label fw-semibold mb-1">On date</label>
+                <div class="input-group rounded-pill">
+                    <span class="input-group-text"><i class="bi bi-calendar2-day"></i></span>
+                    <input type="date" name="date"
+                           value="@(day?.ToString() ?? "")"
+                           class="form-control border-start-0" />
+                </div>
+            </div>
+
+            <!-- Search button -->
+            <div class="col-lg-3 d-grid">
+                <button class="btn btn-outline-primary rounded-pill py-2">
+                    <i class="bi bi-search"></i> Search
+                </button>
+            </div>
+        </div>
+    </div>
+</form>
+
+<!-- ─── Result list ──────────────────────────────────────────────── -->
+@if (!Model.Any())
+{
+    <div class="alert alert-info rounded-4 shadow-sm">
+        <i class="bi bi-info-circle"></i> No bookings match your criteria.
+    </div>
+}
+else
+{
+    <div class="table-responsive shadow-sm rounded-4">
+        <table class="table align-middle m-0">
+            <thead class="table-light">
+                <tr>
+                    <th style="min-width:140px">Venue</th>
+                    <th style="min-width:180px">Title</th>
+                    <th style="min-width:160px">Start</th>
+                    <th style="min-width:160px">End</th>
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <th style="width: 90px"></th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var b in Model)
+                {
+                    <tr class="booking-row">
+                        <td>
+                            <span class="badge bg-primary-subtle text-primary fw-medium">
+                                @b.Venue?.Name
+                            </span>
+                        </td>
+                        <td>@b.Title</td>
+                        <td>@b.StartUtc.LocalDateTime:dd MMM yyyy HH:mm</td>
+                        <td>@b.EndUtc.LocalDateTime:dd MMM yyyy HH:mm</td>
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <td class="text-end">
+                                <a asp-action="Delete" asp-route-id="@b.Id"
+                                   class="btn btn-sm btn-outline-danger rounded-pill">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@section Scripts {
+    <style>
+        /* subtle hover on rows */
+        .booking-row:hover {
+            background-color: #f9fbff;
+            transition: .15s;
+        }
+    </style>
+}

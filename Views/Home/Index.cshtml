@@ -1,0 +1,63 @@
+﻿@{
+    ViewData["Title"] = "Dashboard";
+    bool isAdmin = User.IsInRole("Admin");
+}
+
+<!-- ─── HERO / JUMBOTRON ──────────────────────────────────────────────── -->
+<section class="hero position-relative overflow-hidden mb-5 rounded-4 shadow-lg">
+
+    <!-- animated gradient background -->
+    <div class="hero-bg position-absolute top-0 start-0 w-100 h-100"></div>
+
+    <!-- blurred panel to improve text contrast -->
+    <div class="container position-relative py-5" style="backdrop-filter:blur(6px)">
+        <h1 class="display-5 fw-semibold text-white mb-3">
+            STADIO&nbsp;Centurion&nbsp;Campus&nbsp;Boardrooms
+        </h1>
+
+        <p class="lead text-light mb-4">
+            Manage meeting spaces and reservations effortlessly &nbsp;🚀
+        </p>
+
+        @if (isAdmin)
+        {
+            <a asp-controller="Bookings"
+               asp-action="Create"
+               class="btn btn-warning btn-lg shadow-sm d-inline-flex align-items-center">
+                <i class="bi bi-calendar-plus me-2 fs-4"></i>
+                Book&nbsp;a&nbsp;Venue
+            </a>
+        }
+    </div>
+</section>
+
+<!-- ─── DASHBOARD CARDS (existing partial) ────────────────────────────── -->
+<partial name="_DashboardCards" />
+
+@section Styles
+{
+    <style>
+        /* animated diagonal gradient */
+        .hero-bg {
+            background: linear-gradient(130deg,#1e3a8a 0%,#16255e 50%,#1e3a8a 100%);
+            background-size: 200% 200%;
+            animation: gradientShift 10s ease-in-out infinite;
+        }
+        @@keyframes gradientShift {
+            0%
+
+        {
+            background-position: 0% 50%;
+        }
+
+        50% {
+            background-position: 100% 50%;
+        }
+
+        100% {
+            background-position: 0% 50%;
+        }
+
+        }
+    </style>
+}

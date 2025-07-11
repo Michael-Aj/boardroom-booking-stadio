@@ -1,0 +1,71 @@
+﻿@model BoardroomBooking4.Models.Booking
+@{
+    ViewData["Title"] = "Delete Booking";
+}
+
+<!-- ─── Header ─────────────────────────────────────────────────── -->
+<div class="d-flex align-items-center mb-4">
+    <h1 class="h3 text-danger mb-0">
+        <i class="bi bi-trash-fill me-2"></i>Delete booking?
+    </h1>
+</div>
+
+<!-- ─── Booking summary card ───────────────────────────────────── -->
+<div class="card border-0 shadow-sm rounded-4 mb-4">
+    <div class="card-body">
+        <dl class="row mb-0">
+
+            <dt class="col-sm-3 text-muted">Venue</dt>
+            <dd class="col-sm-9">
+                <span class="badge bg-primary-subtle text-primary">
+                    @Model.Venue?.Name
+                </span>
+            </dd>
+
+            <dt class="col-sm-3 text-muted">When</dt>
+            <dd class="col-sm-9">
+                @Model.StartUtc.LocalDateTime:dd&nbsp;MMM&nbsp;yyyy&nbsp;HH:mm
+                &ndash;
+                @Model.EndUtc.LocalDateTime:dd&nbsp;MMM&nbsp;yyyy&nbsp;HH:mm
+            </dd>
+
+            <dt class="col-sm-3 text-muted">Title</dt>
+            <dd class="col-sm-9">@Model.Title</dd>
+
+            @if (!string.IsNullOrWhiteSpace(Model.Description))
+            {
+                <dt class="col-sm-3 text-muted">Description</dt>
+                <dd class="col-sm-9">@Model.Description</dd>
+            }
+        </dl>
+    </div>
+</div>
+
+<!-- ─── Danger notice ──────────────────────────────────────────── -->
+<div class="alert alert-warning d-flex align-items-center rounded-4 shadow-sm" role="alert">
+    <i class="bi bi-exclamation-triangle-fill me-2 fs-4"></i>
+    <div>
+        This action is <strong>permanent</strong>.
+        The booking will be removed immediately.
+    </div>
+</div>
+
+<!-- ─── Action buttons ─────────────────────────────────────────── -->
+<form asp-action="Delete" method="post" class="d-flex gap-2">
+    <input type="hidden" asp-for="Id" />
+    <button class="btn btn-danger rounded-pill px-4">
+        <i class="bi bi-trash"></i> Delete
+    </button>
+    <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4">
+        Cancel
+    </a>
+</form>
+
+@section Scripts {
+    <style>
+        /* Slight hover effect for the cancel button */
+        a.btn-outline-secondary:hover {
+            background: #f8f9fa;
+        }
+    </style>
+}

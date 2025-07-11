@@ -1,0 +1,77 @@
+﻿@* Views/Shared/_DashboardCards.cshtml *@
+@{
+    bool isAdmin = User.IsInRole("Admin");
+}
+
+<div class="row row-cols-1 row-cols-md-2 g-4">
+
+    @* ───── MANAGE VENUES ───── *@
+    @if (isAdmin)
+    {
+        <div class="col">
+            <a asp-controller="Venues" asp-action="Index" class="card quick-link text-decoration-none shadow-sm card-hover">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-door-open-fill fs-1 text-gradient d-block mb-3"></i>
+                    <h4 class="stretched-link mb-0">Manage&nbsp;Venues</h4>
+                </div>
+            </a>
+        </div>
+    }
+
+    @* ───── VIEW BOOKINGS (always visible) ───── *@
+    <div class="col">
+        <a asp-controller="Bookings" asp-action="Index" class="card quick-link text-decoration-none shadow-sm card-hover">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-calendar-check-fill fs-1 text-gradient d-block mb-3"></i>
+                <h4 class="stretched-link mb-0">View&nbsp;Bookings</h4>
+            </div>
+        </a>
+    </div>
+
+</div>
+
+@section Styles
+{
+    <style>
+
+        /* Re-usable gradient icon tint ----------------------------------*/
+        .text-gradient {
+            background: linear-gradient(135deg,#4f46e5,#06b6d4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Card hover glow ----------------------------------------------*/
+        .card-hover {
+            transition: transform .25s ease, box-shadow .25s ease;
+        }
+
+            .card-hover:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 0 1rem rgba(0,0,0,.15),0 0 1.5rem rgba(79,70,229,.4);
+            }
+
+        /* Pulse animation on first load --------------------------------*/
+        @@keyframes pulseBorder {
+            0%
+
+        {
+            box-shadow: 0 0 0 0 rgba(79,70,229,.5);
+        }
+
+        70% {
+            box-shadow: 0 0 0 .75rem rgba(79,70,229,0);
+        }
+
+        100% {
+            box-shadow: 0 0 0 0 rgba(79,70,229,0);
+        }
+
+        }
+
+        .quick-link {
+            border: none;
+            animation: pulseBorder 1.4s ease-out;
+        }
+    </style>
+}

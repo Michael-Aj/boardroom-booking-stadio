@@ -1,0 +1,49 @@
+﻿@model BoardroomBooking4.Models.Venue
+@{
+    ViewData["Title"] = "Delete Venue";
+}
+
+<!-- ─── Page header ─────────────────────────────────────────────── -->
+<div class="d-flex align-items-center mb-4">
+    <h1 class="h3 mb-0 text-danger">
+        <i class="bi bi-trash3-fill me-2"></i>
+        Delete venue
+    </h1>
+</div>
+
+<!-- ─── Warning card ────────────────────────────────────────────── -->
+<div class="card border-danger shadow-sm rounded-4 mb-4">
+    <div class="card-body">
+        <p class="fs-5 mb-0">
+            You are about to **permanently remove** the venue
+            <span class="fw-bold">@Model.Name</span>.
+        </p>
+        <p class="text-muted mb-0">
+            All bookings associated with this venue will also be lost.
+            This action cannot be undone.
+        </p>
+    </div>
+</div>
+
+<!-- ─── Confirmation form ───────────────────────────────────────── -->
+<form asp-action="Delete" method="post"
+      class="d-flex gap-3 align-items-center">
+
+    <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="RowVersion" />
+
+    <button class="btn btn-danger rounded-pill px-4">
+        <i class="bi bi-exclamation-octagon me-1"></i>
+        Delete
+    </button>
+
+    <a asp-action="Index"
+       class="btn btn-outline-secondary rounded-pill px-4">
+        Cancel
+    </a>
+</form>
+
+@section Scripts
+{
+    <partial name="_ValidationScriptsPartial" />
+}

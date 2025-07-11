@@ -1,0 +1,15 @@
+﻿services:
+  - type: web
+    name: boardroombooking
+    env: docker
+    plan: starter
+    dockerfilePath: ./Dockerfile        # default, but explicit is nice
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: DB_PATH
+        value: /var/data/boardroom.db   # must live on the mounted disk
+    disks:
+      - name: datadisk
+        mountPath: /var/data            # absolute path!
+        sizeGB: 1                       # first GB is free; extra ≈ $0.25/GB-mo :contentReference[oaicite:2]{index=2}

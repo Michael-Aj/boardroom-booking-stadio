@@ -1,0 +1,74 @@
+﻿@model BoardroomBooking4.Models.Venue
+@{
+    ViewData["Title"] = "Venue Details";
+}
+
+<!-- ─── Header / Hero ──────────────────────────────────────────────── -->
+<section class="bg-primary text-white py-5 position-relative overflow-hidden">
+    <div class="container position-relative">
+        <div class="d-flex align-items-center gap-3">
+            <i class="bi bi-door-open-fill display-5"></i>
+            <h1 class="h3 mb-0">@Model.Name</h1>
+        </div>
+    </div>
+
+    <!-- decorative wave -->
+    <svg class="position-absolute bottom-0 start-0 w-100" height="60" viewBox="0 0 1440 60" preserveAspectRatio="none">
+        <path d="M0,0 C480,60 960,0 1440,60 L1440,60 L0,60 Z" fill="var(--bs-body-bg)"></path>
+    </svg>
+</section>
+
+<!-- ─── Floating Card ──────────────────────────────────────────────── -->
+<main class="container mt-n5 position-relative">
+    <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-body p-4 p-md-5">
+
+            <!-- Definition list looks like a table without the fuss -->
+            <dl class="row mb-0">
+                <dt class="col-md-3 fs-sm text-secondary border-bottom py-2">Name</dt>
+                <dd class="col-md-9 border-bottom py-2">@Model.Name</dd>
+
+                <dt class="col-md-3 fs-sm text-secondary border-bottom py-2">Capacity</dt>
+                <dd class="col-md-9 border-bottom py-2">
+                    <span class="badge bg-success-subtle text-success fw-semibold">
+                        <i class="bi bi-people-fill me-1"></i>@Model.Capacity&nbsp;people
+                    </span>
+                </dd>
+
+                <dt class="col-md-3 fs-sm text-secondary py-2">Location</dt>
+                <dd class="col-md-9 py-2">
+                    <span class="badge bg-info-subtle text-info fw-semibold">
+                        <i class="bi bi-geo-alt-fill me-1"></i>@Model.Location
+                    </span>
+                </dd>
+            </dl>
+
+            <div class="mt-4 d-flex gap-2">
+                <a asp-action="Edit" asp-route-id="@Model.Id"
+                   class="btn btn-outline-primary rounded-pill px-4">
+                    <i class="bi bi-pencil-square me-1"></i>Edit
+                </a>
+
+                <a asp-action="Index"
+                   class="btn btn-outline-secondary rounded-pill px-4">
+                    <i class="bi bi-arrow-left me-1"></i>Back
+                </a>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- ─── Optional: little bit of custom CSS for glass-morphism ─────── -->
+@section Scripts {
+    <style>
+        /* Subtle glass look */
+        .card {
+            backdrop-filter: blur(4px);
+            background: rgba(255, 255, 255, 0.85);
+        }
+
+        .fs-sm {
+            font-size: .875rem;
+        }
+    </style>
+}
