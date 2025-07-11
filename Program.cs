@@ -7,62 +7,58 @@ using System;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// DbContext
+// ——————————————————————————————
+// 1.  SERVICE REGISTRATION (before Build)
+// ——————————————————————————————
+
+// 1a. DbContext from appsettings.json
 builder.Services.AddDbContext<AppDbContext>(opts =>
     opts.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-//// Identity (cookie-based)
-//builder.Services.AddIdentity<ApplicationUser, IdentityRole>(opts =>
-//{
-//    opts.Password.RequireNonAlphanumeric = false;
-//    opts.User.RequireUniqueEmail = true;
-//})
-//    .AddEntityFrameworkStores<AppDbContext>()
-//    .AddDefaultTokenProviders();
-
-//// 2. Identity (add default token providers + roles if you wish)
-//builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
-//        options.SignIn.RequireConfirmedAccount = false)
-//    .AddRoles<IdentityRole>()
-//    .AddEntityFrameworkStores<AppDbContext>();
-
-//// MVC + Razor
-//builder.Services.AddControllersWithViews();
-
-//// domain services
-//builder.Services.AddScoped<BookingService>();
-//builder.Services.AddScoped<DbInitializer>();
-
-
-
-var app = builder.Build();
-
-
+// 1b. DbContext override that points at an explicit file path
 var dbPath = Environment.GetEnvironmentVariable("DB_PATH")
-             ?? Path.Combine(app.Environment.ContentRootPath, "data", "boardroom-dev.db");
+             ?? Path.Combine(builder.Environment.ContentRootPath, "data", "boardroom-dev.db");
 
 builder.Services.AddDbContext<AppDbContext>(opt =>
     opt.UseSqlite($"Data Source={dbPath}"));
 
-// Run DB migrations & seeding
+// (commented-out registrations left exactly as provided)
+// 2. Identity (add default token providers + roles if you wish)
+builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
+        options.SignIn.RequireConfirmedAccount = false)
+    .AddRoles<IdentityRole>()
+    .AddEntityFrameworkStores<AppDbContext>();
+
+// MVC + Razor
+builder.Services.AddControllersWithViews();
+
+// domain services
+builder.Services.AddScoped<BookingService>();
+builder.Services.AddScoped<DbInitializer>();
+
+
+// ——————————————————————————————
+// 2.  BUILD THE APP (collection is now read-only)
+// ——————————————————————————————
+var app = builder.Build();
+
+// ——————————————————————————————
+// 3.  POST-BUILD WORK (migrations, seeding, admin user)
+// ——————————————————————————————
 using (var scope = app.Services.CreateScope())
 {
-
     try
     {
-
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         db.Database.Migrate();
 
         var seeder = scope.ServiceProvider.GetRequiredService<DbInitializer>();
         await seeder.SeedAsync();
-
     }
     catch (Exception ex)
     {
         var log = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
         log.LogError(ex, "An error occurred while migrating / seeding the database.");
-        // Re-throw or swallow depending on your deployment policy
         throw;
     }
 }
@@ -88,9 +84,9 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-
-
-// middleware
+// ——————————————————————————————
+// 4.  MIDDLEWARE & ROUTING
+// ——————————————————————————————
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -105,23 +101,9 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-//builder.Services.ConfigureApplicationCookie(options =>
-//{
-//    // Point the auth middleware to OUR controller/view
-//    options.LoginPath = "/Account/Login";        // GET
-//    options.AccessDeniedPath = "/Account/AccessDenied"; // GET
-//    // optional:
-//    options.SlidingExpiration = true;
-//});
+//builder.Services.ConfigureApplicationCookie(options => { … })
+//builder.Services.AddAuthentication("Cookies").AddCookie("Cookies", options => { … })
 
-//builder.Services.AddAuthentication("Cookies")
-//    .AddCookie("Cookies", options =>
-//    {
-//        options.LoginPath = "/Account/Login";
-//        options.AccessDeniedPath = "/Account/AccessDenied";
-//    });
-
-// conventional routing
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
