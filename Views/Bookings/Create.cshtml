@@ -47,7 +47,7 @@
 
                 <div class="input-group rounded-pill">
                     <span class="input-group-text"><i class="bi bi-clock"></i></span>
-                    <input asp-for="StartUtc" type="datetime-local" class="form-control border-start-0" />
+                    <input asp-for="StartUtc" type="datetime-local" asp-format="{0:yyyy-MM-ddTHH:mm}" class="form-control border-start-0" />
                 </div>
                 <span asp-validation-for="StartUtc" class="text-danger small"></span>
             </div>
@@ -57,7 +57,7 @@
 
                 <div class="input-group rounded-pill">
                     <span class="input-group-text"><i class="bi bi-clock-history"></i></span>
-                    <input asp-for="EndUtc" type="datetime-local" class="form-control border-start-0" />
+                    <input asp-for="EndUtc" type="datetime-local" asp-format="{0:yyyy-MM-ddTHH:mm}" class="form-control border-start-0" />
                 </div>
                 <span asp-validation-for="EndUtc" class="text-danger small"></span>
             </div>
