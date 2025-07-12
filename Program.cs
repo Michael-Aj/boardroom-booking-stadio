@@ -12,9 +12,9 @@ var builder = WebApplication.CreateBuilder(args);
 // 1.  SERVICE REGISTRATION (before Build)
 // ——————————————————————————————
 
-// 1a. DbContext from appsettings.json
-builder.Services.AddDbContext<AppDbContext>(opts =>
-    opts.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+//// 1a. DbContext from appsettings.json
+//builder.Services.AddDbContext<AppDbContext>(opts =>
+//    opts.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // 1b. DbContext override that points at an explicit file path
 var dbPath = Environment.GetEnvironmentVariable("DB_PATH")
@@ -36,13 +36,6 @@ builder.Services.AddControllersWithViews();
 // domain services
 builder.Services.AddScoped<BookingService>();
 builder.Services.AddScoped<DbInitializer>();
-
-
-// ——————————————————————————————
-// 2.  BUILD THE APP (collection is now read-only)
-// ——————————————————————————————
-var app = builder.Build();
-
 // 1️⃣  Persist DP keys
 var keysPath = Environment.GetEnvironmentVariable("DP_KEYS_PATH")
               ?? Path.Combine(builder.Environment.ContentRootPath, "data", "keys");
@@ -50,6 +43,12 @@ var keysPath = Environment.GetEnvironmentVariable("DP_KEYS_PATH")
 builder.Services.AddDataProtection()
        .PersistKeysToFileSystem(new DirectoryInfo(keysPath))
        .SetApplicationName("BoardroomBooking4");   // share keys only across this app
+
+// ——————————————————————————————
+// 2.  BUILD THE APP (collection is now read-only)
+// ——————————————————————————————
+var app = builder.Build();
+
 
 // ——————————————————————————————
 // 3.  POST-BUILD WORK (migrations, seeding, admin user)
