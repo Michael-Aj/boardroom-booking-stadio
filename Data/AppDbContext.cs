@@ -25,5 +25,17 @@ public class AppDbContext(DbContextOptions<AppDbContext> opts)
         // composite unique: one booking per venue/time
         b.Entity<Booking>()
          .HasIndex(bk => new { bk.VenueId, bk.StartUtc, bk.EndUtc });
+
+        b.Entity<Booking>()
+       .Property(b => b.StartUtc)
+       .HasConversion(
+           v => v.ToUnixTimeMilliseconds(),               // to DB
+           v => DateTimeOffset.FromUnixTimeMilliseconds(v));
+
+        b.Entity<Booking>()
+               .Property(b => b.EndUtc)
+               .HasConversion(
+                   v => v.ToUnixTimeMilliseconds(),
+                   v => DateTimeOffset.FromUnixTimeMilliseconds(v));
     }
 }
