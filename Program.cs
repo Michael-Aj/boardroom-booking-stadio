@@ -1,15 +1,16 @@
-using BoardroomBooking4.Data;
+ï»¿using BoardroomBooking4.Data;
 using BoardroomBooking4.Models;
 using BoardroomBooking4.Services;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ——————————————————————————————
+// â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”
 // 1.  SERVICE REGISTRATION (before Build)
-// ——————————————————————————————
+// â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”
 
 // 1a. DbContext from appsettings.json
 builder.Services.AddDbContext<AppDbContext>(opts =>
@@ -37,14 +38,22 @@ builder.Services.AddScoped<BookingService>();
 builder.Services.AddScoped<DbInitializer>();
 
 
-// ——————————————————————————————
+// â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”
 // 2.  BUILD THE APP (collection is now read-only)
-// ——————————————————————————————
+// â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”
 var app = builder.Build();
 
-// ——————————————————————————————
+// 1ï¸âƒ£  Persist DP keys
+var keysPath = Environment.GetEnvironmentVariable("DP_KEYS_PATH")
+              ?? Path.Combine(builder.Environment.ContentRootPath, "data", "keys");
+
+builder.Services.AddDataProtection()
+       .PersistKeysToFileSystem(new DirectoryInfo(keysPath))
+       .SetApplicationName("BoardroomBooking4");   // share keys only across this app
+
+// â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”
 // 3.  POST-BUILD WORK (migrations, seeding, admin user)
-// ——————————————————————————————
+// â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”
 using (var scope = app.Services.CreateScope())
 {
     try
@@ -84,9 +93,9 @@ using (var scope = app.Services.CreateScope())
     //}
 }
 
-// ——————————————————————————————
+// â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”
 // 4.  MIDDLEWARE & ROUTING
-// ——————————————————————————————
+// â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -101,8 +110,8 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-//builder.Services.ConfigureApplicationCookie(options => { … })
-//builder.Services.AddAuthentication("Cookies").AddCookie("Cookies", options => { … })
+//builder.Services.ConfigureApplicationCookie(options => { â€¦ })
+//builder.Services.AddAuthentication("Cookies").AddCookie("Cookies", options => { â€¦ })
 
 app.MapControllerRoute(
     name: "default",
