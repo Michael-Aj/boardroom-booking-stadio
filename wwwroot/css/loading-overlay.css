@@ -1,0 +1,20 @@
+﻿/* wwwroot/css/loading-overlay.css */
+.loading-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1055; /* above navbar & modals */
+    transition: opacity .2s ease;
+}
+
+    .loading-overlay:not(.d-none) {
+        opacity: 1;
+    }
+
+    .loading-overlay.d-none {
+        opacity: 0;
+        pointer-events: none;
+    }
