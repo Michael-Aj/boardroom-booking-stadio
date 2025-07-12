@@ -1,0 +1,7 @@
+﻿@* Pages/Shared/DisplayTemplates/DateTimeOffset.cshtml *@
+@model DateTimeOffset?   
+
+@if (Model is not null)
+{
+    @Model.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
+}
