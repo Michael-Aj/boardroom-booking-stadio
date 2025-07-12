@@ -32,6 +32,7 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
 
 // MVC + Razor
 builder.Services.AddControllersWithViews();
+builder.Services.AddRazorPages();
 
 // domain services
 builder.Services.AddScoped<BookingService>();
@@ -97,7 +98,7 @@ using (var scope = app.Services.CreateScope())
 // ——————————————————————————————
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Home/Error");
+    app.UseExceptionHandler("/Error");
     app.UseHsts();
 }
 
