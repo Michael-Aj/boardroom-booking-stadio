@@ -45,6 +45,12 @@ builder.Services.AddDataProtection()
        .PersistKeysToFileSystem(new DirectoryInfo(keysPath))
        .SetApplicationName("BoardroomBooking4");   // share keys only across this app
 
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.ExpireTimeSpan = TimeSpan.FromMinutes(60); // auto-logout after 60 min
+    options.SlidingExpiration = true;                     // optional: refresh on activity
+});
+
 // ——————————————————————————————
 // 2.  BUILD THE APP (collection is now read-only)
 // ——————————————————————————————
