@@ -9,7 +9,7 @@ public class Venue
     [Required, StringLength(60)]
     public string Name { get; set; } = string.Empty;
 
-    [Range(1, 100)]
+    [Range(1, 500)]
     public int Capacity { get; set; }
 
     [Required, StringLength(200)]
