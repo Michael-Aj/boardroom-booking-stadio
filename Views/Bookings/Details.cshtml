@@ -1,0 +1,64 @@
+﻿@model BoardroomBooking4.Models.Booking
+@using BoardroomBooking4.Models
+@{
+    ViewData["Title"] = "Booking Details";
+}
+
+<!-- Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 m-0">
+        <i class="bi bi-info-square text-primary me-2"></i>@ViewData["Title"]
+    </h1>
+    <a asp-action="Index" class="btn btn-outline-secondary rounded-pill">
+        <i class="bi bi-arrow-left"></i> Back
+    </a>
+</div>
+
+<!-- Card -->
+<div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body p-4">
+        <dl class="row mb-0">
+            <dt class="col-sm-3">Venue</dt>
+            <dd class="col-sm-9">
+                <span class="badge bg-primary-subtle text-primary fw-medium">
+                    @Model.Venue?.Name
+                </span>
+            </dd>
+
+            <dt class="col-sm-3">Title</dt>
+            <dd class="col-sm-9">@Model.Title</dd>
+
+            <dt class="col-sm-3">Start</dt>
+            <dd class="col-sm-9">@Model.StartUtc.LocalDateTime:dd MMM yyyy HH:mm</dd>
+
+            <dt class="col-sm-3">End</dt>
+            <dd class="col-sm-9">@Model.EndUtc.LocalDateTime:dd MMM yyyy HH:mm</dd>
+
+            <dt class="col-sm-3">Description</dt>
+            <dd class="col-sm-9">@(!string.IsNullOrWhiteSpace(Model.Description) ? Model.Description : "—")</dd>
+        </dl>
+    </div>
+
+    <div class="card-footer bg-white border-0 p-4 text-end">
+        @if (User.IsInRole("Admin"))
+        {
+            <a asp-action="Edit" asp-route-id="@Model.Id"
+               class="btn btn-primary rounded-pill me-2">
+                <i class="bi bi-pencil-square me-1"></i>Edit
+            </a>
+            <a asp-action="Delete" asp-route-id="@Model.Id"
+               class="btn btn-outline-danger rounded-pill">
+                <i class="bi bi-trash me-1"></i>Delete
+            </a>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <style>
+        .card:hover {
+            transform: translateY(-2px);
+            transition: .2s ease;
+        }
+    </style>
+}
