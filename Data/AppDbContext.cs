@@ -1,7 +1,10 @@
 ﻿using BoardroomBooking4.Models;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using System;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace BoardroomBooking4.Data;
 
@@ -15,37 +18,67 @@ public class AppDbContext(DbContextOptions<AppDbContext> opts)
     {
         base.OnModelCreating(b);
 
-        /* ── Venue ───────────────────────────────────────────────────────── */
-        // Concurrency token
-        b.Entity<Venue>()
-         .Property(v => v.RowVersion)
-         .IsRowVersion();
-
-        /* ── Booking ─────────────────────────────────────────────────────── */
-        // Composite UNIQUE index: one booking per exact venue/start/end tuple
-        b.Entity<Booking>()
-         .HasIndex(bk => new { bk.VenueId, bk.StartUtc, bk.EndUtc })
-         .IsUnique();
-
-        // Logical constraint: End must be after Start
-        b.Entity<Booking>()
-         .ToTable(tb => tb.HasCheckConstraint(
-             "CK_Bookings_StartBeforeEnd",
-             "[EndUtc] > [StartUtc]"
-         ));
-
-        // SQLite cannot ORDER BY DateTimeOffset; store as INTEGER ticks instead
-        if (Database.IsSqlite())
+        // ── Venue config ───────────────────────────────────────────────────
+        b.Entity<Venue>(e =>
         {
-            var dtoToLong = new DateTimeOffsetToBinaryConverter();
+            // SQLite has no native rowversion; mark as concurrency token and
+            // we'll bump it manually in SaveChanges (see overrides below).
+            e.Property(v => v.RowVersion)
+             .IsConcurrencyToken()
+             .ValueGeneratedNever();
 
-            b.Entity<Booking>()
-             .Property(x => x.StartUtc)
-             .HasConversion(dtoToLong);
+            e.HasMany(v => v.Bookings)
+             .WithOne(bk => bk.Venue!)
+             .HasForeignKey(bk => bk.VenueId)
+             .OnDelete(DeleteBehavior.Restrict);
+        });
 
-            b.Entity<Booking>()
-             .Property(x => x.EndUtc)
-             .HasConversion(dtoToLong);
+        // ── Booking config ─────────────────────────────────────────────────
+        b.Entity<Booking>(e =>
+        {
+            // Prevent identical duplicates (same venue + identical start/end)
+            e.HasIndex(bk => new { bk.VenueId, bk.StartUtc, bk.EndUtc })
+             .IsUnique();
+
+            // Helpful for searching by venue/day
+            e.HasIndex(bk => new { bk.VenueId, bk.StartUtc });
+
+            // DB-level guard: Start before End (SQLite syntax: no brackets)
+            e.HasCheckConstraint("CK_Booking_StartBeforeEnd", "StartUtc < EndUtc");
+
+            // Store DateTimeOffset as epoch milliseconds (INTEGER in SQLite)
+            e.Property(bk => bk.StartUtc)
+             .HasConversion(v => v.ToUnixTimeMilliseconds(),
+                            v => DateTimeOffset.FromUnixTimeMilliseconds(v))
+             .HasColumnType("INTEGER");
+
+            e.Property(bk => bk.EndUtc)
+             .HasConversion(v => v.ToUnixTimeMilliseconds(),
+                            v => DateTimeOffset.FromUnixTimeMilliseconds(v))
+             .HasColumnType("INTEGER");
+        });
+    }
+
+    // ── Concurrency token bump for SQLite (RowVersion) ─────────────────────
+    public override int SaveChanges()
+    {
+        BumpVenueRowVersions();
+        return base.SaveChanges();
+    }
+
+    public override Task<int> SaveChangesAsync(CancellationToken ct = default)
+    {
+        BumpVenueRowVersions();
+        return base.SaveChangesAsync(ct);
+    }
+
+    private void BumpVenueRowVersions()
+    {
+        // Ensure the token is never null and changes on every update
+        foreach (var entry in ChangeTracker.Entries<Venue>()
+                     .Where(e => e.State == EntityState.Added || e.State == EntityState.Modified))
+        {
+            entry.Property(nameof(Venue.RowVersion)).CurrentValue = Guid.NewGuid().ToByteArray();
         }
     }
 }

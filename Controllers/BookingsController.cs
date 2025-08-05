@@ -9,10 +9,6 @@ namespace BoardroomBooking4.Controllers;
 /// <summary>Public list + Admin CRUD for bookings.</summary>
 public class BookingsController(BookingService svc) : Controller
 {
-    // Helper: trim seconds & milliseconds, preserve offset
-    private static DateTimeOffset TrimToMinute(DateTimeOffset dt) =>
-        new DateTimeOffset(dt.Year, dt.Month, dt.Day, dt.Hour, dt.Minute, 0, dt.Offset);
-
     /*────────────────────────────  LIST / SEARCH ────────────────────────────*/
     public async Task<IActionResult> Index(int? venueId, DateOnly? date,
                                            CancellationToken ct)
@@ -21,7 +17,10 @@ public class BookingsController(BookingService svc) : Controller
         ViewData["SelectedVenue"] = venueId;
         ViewData["SelectedDate"] = date;
 
-        var items = await svc.Filter(venueId, date).ToListAsync(ct);
+        var items = (await svc.Filter(venueId, date)
+                      .ToListAsync(ct))      // materialise first
+            .OrderBy(b => b.StartUtc)       // then sort in memory
+            .ToList();
         return View(items);
     }
 
@@ -40,12 +39,10 @@ public class BookingsController(BookingService svc) : Controller
     public async Task<IActionResult> Create(CancellationToken ct)
     {
         ViewData["Venues"] = await svc.GetVenuesAsync(ct);
-
-        var now = TrimToMinute(DateTimeOffset.UtcNow);
         return View(new Booking
         {
-            StartUtc = now,
-            EndUtc = now.AddHours(1)
+            StartUtc = DateTimeOffset.UtcNow,
+            EndUtc = DateTimeOffset.UtcNow.AddHours(1)
         });
     }
 
@@ -53,15 +50,9 @@ public class BookingsController(BookingService svc) : Controller
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(Booking model, CancellationToken ct)
     {
-        // Normalize to minute (drop seconds/ms)
-        model.StartUtc = TrimToMinute(model.StartUtc);
-        model.EndUtc = TrimToMinute(model.EndUtc);
-
-        // Defensive check (Booking implements IValidatableObject too)
-        if (model.EndUtc <= model.StartUtc)
-        {
-            ModelState.AddModelError(string.Empty, "End time must be after start time.");
-        }
+        // Guard: Start must be before End (defense in depth; model also validates this)
+        if (model.StartUtc >= model.EndUtc)
+            ModelState.AddModelError(string.Empty, "Start time must be before end time.");
 
         if (!ModelState.IsValid)
         {
@@ -85,6 +76,7 @@ public class BookingsController(BookingService svc) : Controller
     public async Task<IActionResult> Edit(int id, CancellationToken ct)
     {
         var item = await svc.Filter(null, null)
+                            .AsNoTracking()
                             .FirstOrDefaultAsync(b => b.Id == id, ct);
 
         if (item is null) return NotFound();
@@ -97,17 +89,11 @@ public class BookingsController(BookingService svc) : Controller
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(int id, Booking model, CancellationToken ct)
     {
-        if (id != model.Id) return NotFound();
+        if (id != model.Id) return BadRequest();
 
-        // Normalize to minute (drop seconds/ms)
-        model.StartUtc = TrimToMinute(model.StartUtc);
-        model.EndUtc = TrimToMinute(model.EndUtc);
-
-        // Defensive check (in addition to model validation)
-        if (model.EndUtc <= model.StartUtc)
-        {
-            ModelState.AddModelError(string.Empty, "End time must be after start time.");
-        }
+        // Guard: Start must be before End (defense in depth)
+        if (model.StartUtc >= model.EndUtc)
+            ModelState.AddModelError(string.Empty, "Start time must be before end time.");
 
         if (!ModelState.IsValid)
         {
@@ -115,6 +101,7 @@ public class BookingsController(BookingService svc) : Controller
             return View(model);
         }
 
+        // Requires BookingService.UpdateAsync (see implementation below)
         var (ok, err) = await svc.UpdateAsync(model, ct);
         if (!ok)
         {

@@ -80,10 +80,8 @@ else
                     <th style="min-width:180px">Title</th>
                     <th style="min-width:160px">Start</th>
                     <th style="min-width:160px">End</th>
-                    @if (User.IsInRole("Admin"))
-                    {
-                        <th class="text-end" style="width: 160px;">Actions</th>
-                    }
+                    @* CHANGED: widen action column to fit Edit/Details/Delete *@
+                    <th style="width: 220px" class="text-end">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -98,24 +96,37 @@ else
                         <td>@b.Title</td>
                         <td>@b.StartUtc.LocalDateTime:dd MMM yyyy HH:mm</td>
                         <td>@b.EndUtc.LocalDateTime:dd MMM yyyy HH:mm</td>
-                        @if (User.IsInRole("Admin"))
-                        {
-                            <td class="text-end">
-                                <div class="d-inline-flex gap-2">
-                                    <a asp-action="Edit" asp-route-id="@b.Id"
-                                       class="btn btn-sm btn-outline-secondary rounded-pill"
-                                       data-bs-toggle="tooltip" data-bs-title="Edit this booking">
-                                        <i class="bi bi-pencil-square me-1"></i>Edit
-                                    </a>
-                                    <a asp-action="Delete" asp-route-id="@b.Id"
-                                       class="btn btn-sm btn-outline-danger rounded-pill"
-                                       data-bs-toggle="tooltip" data-bs-title="Delete this booking"
-                                       onclick="return confirm('Delete this booking?');">
-                                        <i class="bi bi-trash me-1"></i>Delete
-                                    </a>
-                                </div>
-                            </td>
-                        }
+
+                        @* CHANGED: action buttons *@
+                        <td class="text-end">
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <a asp-action="Edit" asp-route-id="@b.Id"
+                                   class="btn btn-sm btn-outline-primary rounded-pill me-1"
+                                   title="Edit booking">
+                                    <i class="bi bi-pencil-square"></i> Edit
+                                </a>
+                                <a asp-action="Details" asp-route-id="@b.Id"
+                                   class="btn btn-sm btn-outline-secondary rounded-pill me-1"
+                                   title="View details">
+                                    <i class="bi bi-eye"></i> Details
+                                </a>
+                                <a asp-action="Delete" asp-route-id="@b.Id"
+                                   class="btn btn-sm btn-outline-danger rounded-pill"
+                                   title="Delete booking"
+                                   onclick="return confirm('Delete this booking?');">
+                                    <i class="bi bi-trash"></i> Delete
+                                </a>
+                            }
+                            else
+                            {
+                                <a asp-action="Details" asp-route-id="@b.Id"
+                                   class="btn btn-sm btn-outline-secondary rounded-pill"
+                                   title="View details">
+                                    <i class="bi bi-eye"></i> Details
+                                </a>
+                            }
+                        </td>
                     </tr>
                 }
             </tbody>
@@ -131,11 +142,4 @@ else
             transition: .15s;
         }
     </style>
-    <script>
-        // Enable tooltips for the action buttons
-        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-        tooltipTriggerList.forEach(function (el) {
-            new bootstrap.Tooltip(el);
-        });
-    </script>
 }
