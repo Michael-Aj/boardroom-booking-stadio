@@ -1,14 +1,14 @@
 ﻿@model BoardroomBooking4.Models.Booking
 @using BoardroomBooking4.Models
 @{
-    ViewData["Title"] = "New Booking";
+    ViewData["Title"] = "Edit Booking";
     var venues = (IEnumerable<Venue>)ViewData["Venues"]!;
 }
 
 <!-- ─── Header ───────────────────────────────────────────────────── -->
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h3 m-0">
-        <i class="bi bi-calendar-plus-fill text-primary me-2"></i>@ViewData["Title"]
+        <i class="bi bi-pencil-square text-primary me-2"></i>@ViewData["Title"]
     </h1>
     <a asp-action="Index" class="btn btn-outline-secondary rounded-pill">
         <i class="bi bi-arrow-left"></i> Back
@@ -16,8 +16,10 @@
 </div>
 
 <!-- ─── Form card ────────────────────────────────────────────────── -->
-<form asp-action="Create" method="post" class="card border-0 shadow-sm rounded-4">
+<form asp-action="Edit" method="post" class="card border-0 shadow-sm rounded-4">
     @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Id" />
+
     <div class="card-body p-4">
         <!-- Validation summary -->
         <div asp-validation-summary="ModelOnly" class="alert alert-danger rounded-3 py-2" role="alert"></div>
@@ -37,26 +39,34 @@
             <!-- Title ----------------------------------------------->
             <div class="col-lg-6">
                 <label asp-for="Title" class="form-label fw-semibold"></label>
-                <input asp-for="Title" class="form-control rounded-pill py-2" placeholder="Marketing strategy session" />
+                <input asp-for="Title" class="form-control rounded-pill py-2" />
                 <span asp-validation-for="Title" class="text-danger small"></span>
             </div>
 
-            <!-- Start ----------------------------------------------->
+            <!-- Start (minutes only) -------------------------------->
             <div class="col-md-6">
                 <label asp-for="StartUtc" class="form-label fw-semibold">Start (local time)</label>
                 <div class="input-group rounded-pill">
                     <span class="input-group-text"><i class="bi bi-clock"></i></span>
-                    <input asp-for="StartUtc" type="datetime-local" class="form-control border-start-0" />
+                    <input asp-for="StartUtc"
+                           type="datetime-local"
+                           class="form-control border-start-0"
+                           asp-format="{0:yyyy-MM-ddTHH:mm}"
+                           step="60" />
                 </div>
                 <span asp-validation-for="StartUtc" class="text-danger small" data-valmsg-for="StartUtc"></span>
             </div>
 
-            <!-- End ------------------------------------------------->
+            <!-- End (minutes only) ---------------------------------->
             <div class="col-md-6">
                 <label asp-for="EndUtc" class="form-label fw-semibold">End (local time)</label>
                 <div class="input-group rounded-pill">
                     <span class="input-group-text"><i class="bi bi-clock-history"></i></span>
-                    <input asp-for="EndUtc" type="datetime-local" class="form-control border-start-0" />
+                    <input asp-for="EndUtc"
+                           type="datetime-local"
+                           class="form-control border-start-0"
+                           asp-format="{0:yyyy-MM-ddTHH:mm}"
+                           step="60" />
                 </div>
                 <span asp-validation-for="EndUtc" class="text-danger small" data-valmsg-for="EndUtc"></span>
             </div>
@@ -64,8 +74,7 @@
             <!-- Description ----------------------------------------->
             <div class="col-12">
                 <label asp-for="Description" class="form-label fw-semibold"></label>
-                <textarea asp-for="Description" rows="3" class="form-control rounded-4"
-                          placeholder="Optional agenda or notes"></textarea>
+                <textarea asp-for="Description" rows="3" class="form-control rounded-4"></textarea>
                 <span asp-validation-for="Description" class="text-danger small"></span>
             </div>
         </div>
@@ -74,7 +83,7 @@
     <!-- Footer buttons --------------------------------------------->
     <div class="card-footer bg-white border-0 p-4 text-end">
         <button class="btn btn-primary rounded-pill px-4">
-            <i class="bi bi-save me-1"></i>Save
+            <i class="bi bi-save me-1"></i>Save changes
         </button>
         <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4 ms-2">Cancel</a>
     </div>
@@ -83,14 +92,13 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <style>
-        /* subtle anim hover */
         .card:hover {
             transform: translateY(-2px);
             transition: .2s ease;
         }
     </style>
     <script>
-        // Lightweight client-side cross-field check: EndUtc > StartUtc
+        // Same cross-field client check on Edit
         (function () {
             function parseLocal(input) { return input && input.value ? new Date(input.value) : null; }
 

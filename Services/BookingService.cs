@@ -86,8 +86,42 @@ public class BookingService
             q = q.Where(b => b.StartUtc >= fromUtc && b.StartUtc <= toUtc);
         }
 
-        return q;
+        return q.OrderBy(b => b.StartUtc);
     }
+
+    public async Task<(bool ok, string? err)> UpdateAsync(Booking model, CancellationToken ct)
+    {
+        // Guard again here if you want belt-and-braces
+        if (model.EndUtc <= model.StartUtc)
+            return (false, "End time must be after start time.");
+
+        var exists = await _db.Bookings.AnyAsync(b => b.Id == model.Id, ct);
+        if (!exists) return (false, "Booking not found.");
+
+        // (Optional) prevent overlaps for same venue
+        // bool overlaps = await _db.Bookings.AnyAsync(b =>
+        //     b.VenueId == model.VenueId &&
+        //     b.Id != model.Id &&
+        //     b.StartUtc < model.EndUtc &&
+        //     model.StartUtc < b.EndUtc, ct);
+        // if (overlaps) return (false, "The venue is already booked in that time range.");
+
+        _db.Bookings.Update(model);
+        try
+        {
+            await _db.SaveChangesAsync(ct);
+            return (true, null);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return (false, "The booking was modified by someone else. Please reload and try again.");
+        }
+        catch (Exception ex)
+        {
+            return (false, ex.Message);
+        }
+    }
+
 }
 
 

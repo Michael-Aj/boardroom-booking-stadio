@@ -27,15 +27,10 @@ public class AppDbContext(DbContextOptions<AppDbContext> opts)
          .HasIndex(bk => new { bk.VenueId, bk.StartUtc, bk.EndUtc });
 
         b.Entity<Booking>()
-       .Property(b => b.StartUtc)
-       .HasConversion(
-           v => v.ToUnixTimeMilliseconds(),               // to DB
-           v => DateTimeOffset.FromUnixTimeMilliseconds(v));
+    .ToTable(tb => tb.HasCheckConstraint(
+        "CK_Bookings_StartBeforeEnd",
+        "[EndUtc] > [StartUtc]"
+    ));
 
-        b.Entity<Booking>()
-               .Property(b => b.EndUtc)
-               .HasConversion(
-                   v => v.ToUnixTimeMilliseconds(),
-                   v => DateTimeOffset.FromUnixTimeMilliseconds(v));
     }
 }
