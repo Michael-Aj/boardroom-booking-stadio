@@ -1,4 +1,5 @@
-﻿using BoardroomBooking4.Models;
+﻿// Data/AppDbContext.cs (drop-in)
+using BoardroomBooking4.Models;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -13,72 +14,70 @@ public class AppDbContext(DbContextOptions<AppDbContext> opts)
 {
     public DbSet<Venue> Venues => Set<Venue>();
     public DbSet<Booking> Bookings => Set<Booking>();
+    public DbSet<BookingSeries> BookingSeries => Set<BookingSeries>(); // NEW
 
     protected override void OnModelCreating(ModelBuilder b)
     {
         base.OnModelCreating(b);
 
-        // ── Venue config ───────────────────────────────────────────────────
+        // Venue
         b.Entity<Venue>(e =>
         {
-            // SQLite has no native rowversion; mark as concurrency token and
-            // we'll bump it manually in SaveChanges (see overrides below).
-            e.Property(v => v.RowVersion)
-             .IsConcurrencyToken()
-             .ValueGeneratedNever();
-
+            e.Property(v => v.RowVersion).IsConcurrencyToken().ValueGeneratedNever();
             e.HasMany(v => v.Bookings)
              .WithOne(bk => bk.Venue!)
              .HasForeignKey(bk => bk.VenueId)
              .OnDelete(DeleteBehavior.Restrict);
         });
 
-        // ── Booking config ─────────────────────────────────────────────────
+        // BookingSeries (master)
+        b.Entity<BookingSeries>(e =>
+        {
+            e.HasCheckConstraint("CK_Series_StartBeforeEnd", "StartUtc < EndUtc");
+
+            e.Property(x => x.StartUtc)
+             .HasConversion(v => v.ToUnixTimeMilliseconds(),
+                            v => DateTimeOffset.FromUnixTimeMilliseconds(v))
+             .HasColumnType("INTEGER");
+            e.Property(x => x.EndUtc)
+             .HasConversion(v => v.ToUnixTimeMilliseconds(),
+                            v => DateTimeOffset.FromUnixTimeMilliseconds(v))
+             .HasColumnType("INTEGER");
+            e.Property(x => x.UntilUtc)
+             .HasConversion(v => v.HasValue ? v.Value.ToUnixTimeMilliseconds() : (long?)null,
+                            v => v.HasValue ? DateTimeOffset.FromUnixTimeMilliseconds(v.Value) : (DateTimeOffset?)null)
+             .HasColumnType("INTEGER");
+        });
+
+        // Booking (occurrence)
         b.Entity<Booking>(e =>
         {
-            // Prevent identical duplicates (same venue + identical start/end)
-            e.HasIndex(bk => new { bk.VenueId, bk.StartUtc, bk.EndUtc })
-             .IsUnique();
+            // Exact-duplicate guard (same venue + identical times)
+            e.HasIndex(bk => new { bk.VenueId, bk.StartUtc, bk.EndUtc }).IsUnique();
 
-            // Helpful for searching by venue/day
+            // Helpful for search
             e.HasIndex(bk => new { bk.VenueId, bk.StartUtc });
 
-            // DB-level guard: Start before End (SQLite syntax: no brackets)
             e.HasCheckConstraint("CK_Booking_StartBeforeEnd", "StartUtc < EndUtc");
 
-            // Store DateTimeOffset as epoch milliseconds (INTEGER in SQLite)
             e.Property(bk => bk.StartUtc)
              .HasConversion(v => v.ToUnixTimeMilliseconds(),
                             v => DateTimeOffset.FromUnixTimeMilliseconds(v))
              .HasColumnType("INTEGER");
-
             e.Property(bk => bk.EndUtc)
              .HasConversion(v => v.ToUnixTimeMilliseconds(),
                             v => DateTimeOffset.FromUnixTimeMilliseconds(v))
              .HasColumnType("INTEGER");
+
+            // Link to series; cascade delete occurrences when series is removed
+            e.HasOne(bk => bk.Series)
+             .WithMany(s => s.Bookings)
+             .HasForeignKey(bk => bk.SeriesId)
+             .OnDelete(DeleteBehavior.Cascade);
         });
     }
 
-    // ── Concurrency token bump for SQLite (RowVersion) ─────────────────────
-    public override int SaveChanges()
-    {
-        BumpVenueRowVersions();
-        return base.SaveChanges();
-    }
-
-    public override Task<int> SaveChangesAsync(CancellationToken ct = default)
-    {
-        BumpVenueRowVersions();
-        return base.SaveChangesAsync(ct);
-    }
-
-    private void BumpVenueRowVersions()
-    {
-        // Ensure the token is never null and changes on every update
-        foreach (var entry in ChangeTracker.Entries<Venue>()
-                     .Where(e => e.State == EntityState.Added || e.State == EntityState.Modified))
-        {
-            entry.Property(nameof(Venue.RowVersion)).CurrentValue = Guid.NewGuid().ToByteArray();
-        }
-    }
+    // Optional: keep your Venue.RowVersion bump here if you use it
+    public override int SaveChanges() => base.SaveChanges();
+    public override Task<int> SaveChangesAsync(CancellationToken ct = default) => base.SaveChangesAsync(ct);
 }

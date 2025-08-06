@@ -1,5 +1,6 @@
 ﻿using BoardroomBooking4.Models;
 using BoardroomBooking4.Services;
+using BoardroomBooking4.ViewModels;                 // <-- NEW
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -10,17 +11,16 @@ namespace BoardroomBooking4.Controllers;
 public class BookingsController(BookingService svc) : Controller
 {
     /*────────────────────────────  LIST / SEARCH ────────────────────────────*/
-    public async Task<IActionResult> Index(int? venueId, DateOnly? date,
-                                           CancellationToken ct)
+    public async Task<IActionResult> Index(int? venueId, DateOnly? date, CancellationToken ct)
     {
         ViewData["Venues"] = await svc.GetVenuesAsync(ct);
         ViewData["SelectedVenue"] = venueId;
         ViewData["SelectedDate"] = date;
 
-        var items = (await svc.Filter(venueId, date)
-                      .ToListAsync(ct))      // materialise first
-            .OrderBy(b => b.StartUtc)       // then sort in memory
-            .ToList();
+        var items = await svc.Filter(venueId, date)
+                             .AsNoTracking()
+                             .OrderBy(b => b.StartUtc)   // sort in DB
+                             .ToListAsync(ct);
         return View(items);
     }
 
@@ -28,29 +28,34 @@ public class BookingsController(BookingService svc) : Controller
     public async Task<IActionResult> Details(int id, CancellationToken ct)
     {
         var item = await svc.Filter(null, null)
+                            .AsNoTracking()
                             .Include(b => b.Venue)
                             .FirstOrDefaultAsync(b => b.Id == id, ct);
 
         return item is null ? NotFound() : View(item);
     }
 
-    /*────────────────────────────  CREATE ────────────────────────────────*/
+    /*────────────────────────────  CREATE (wired to VM/series) ──────────────*/
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Create(CancellationToken ct)
     {
         ViewData["Venues"] = await svc.GetVenuesAsync(ct);
-        return View(new Booking
+
+        // Use the recurrence view-model with sensible defaults
+        return View(new BookingCreateViewModel
         {
             StartUtc = DateTimeOffset.UtcNow,
-            EndUtc = DateTimeOffset.UtcNow.AddHours(1)
+            EndUtc = DateTimeOffset.UtcNow.AddHours(1),
+            Frequency = RecurrenceFrequency.None,
+            Interval = 1
         });
     }
 
     [Authorize(Roles = "Admin")]
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(Booking model, CancellationToken ct)
+    public async Task<IActionResult> Create(BookingCreateViewModel model, CancellationToken ct)
     {
-        // Guard: Start must be before End (defense in depth; model also validates this)
+        // Guard: Start must be before End (extra safety; service also checks)
         if (model.StartUtc >= model.EndUtc)
             ModelState.AddModelError(string.Empty, "Start time must be before end time.");
 
@@ -60,10 +65,11 @@ public class BookingsController(BookingService svc) : Controller
             return View(model);
         }
 
-        var (ok, err) = await svc.CreateAsync(model, ct);
+        // Create one-time or recurring series (atomic)
+        var (ok, err) = await svc.CreateSeriesAsync(model, ct);
         if (!ok)
         {
-            ModelState.AddModelError(string.Empty, err ?? "Unable to book.");
+            ModelState.AddModelError(string.Empty, err ?? "Unable to create booking(s).");
             ViewData["Venues"] = await svc.GetVenuesAsync(ct);
             return View(model);
         }
@@ -91,7 +97,7 @@ public class BookingsController(BookingService svc) : Controller
     {
         if (id != model.Id) return BadRequest();
 
-        // Guard: Start must be before End (defense in depth)
+        // Guard: Start must be before End
         if (model.StartUtc >= model.EndUtc)
             ModelState.AddModelError(string.Empty, "Start time must be before end time.");
 
@@ -101,7 +107,6 @@ public class BookingsController(BookingService svc) : Controller
             return View(model);
         }
 
-        // Requires BookingService.UpdateAsync (see implementation below)
         var (ok, err) = await svc.UpdateAsync(model, ct);
         if (!ok)
         {
@@ -118,6 +123,7 @@ public class BookingsController(BookingService svc) : Controller
     public async Task<IActionResult> Delete(int id, CancellationToken ct)
     {
         var item = await svc.Filter(null, null)
+                            .AsNoTracking()
                             .Include(b => b.Venue)
                             .FirstOrDefaultAsync(b => b.Id == id, ct);
 

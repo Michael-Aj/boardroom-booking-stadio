@@ -6,6 +6,7 @@
     var venues = (IEnumerable<Venue>)ViewData["Venues"]!;
     int? selected = ViewData["SelectedVenue"] as int?;
     DateOnly? day = ViewData["SelectedDate"] as DateOnly?;
+    var nowUtc = DateTimeOffset.UtcNow; // NEW: reference time in UTC
 }
 
 <!-- ─── Page header ──────────────────────────────────────────────── -->
@@ -80,14 +81,17 @@ else
                     <th style="min-width:180px">Title</th>
                     <th style="min-width:160px">Start</th>
                     <th style="min-width:160px">End</th>
-                    @* CHANGED: widen action column to fit Edit/Details/Delete *@
                     <th style="width: 220px" class="text-end">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach (var b in Model)
                 {
-                    <tr class="booking-row">
+                    var rowClass = b.EndUtc <= nowUtc
+                    ? "booking-past"
+                    : (b.StartUtc <= nowUtc && nowUtc < b.EndUtc ? "booking-now" : "");
+
+                    <tr class="booking-row @rowClass">
                         <td>
                             <span class="badge bg-primary-subtle text-primary fw-medium">
                                 @b.Venue?.Name
@@ -97,7 +101,6 @@ else
                         <td>@b.StartUtc.LocalDateTime:dd MMM yyyy HH:mm</td>
                         <td>@b.EndUtc.LocalDateTime:dd MMM yyyy HH:mm</td>
 
-                        @* CHANGED: action buttons *@
                         <td class="text-end">
                             @if (User.IsInRole("Admin"))
                             {
@@ -140,6 +143,17 @@ else
         .booking-row:hover {
             background-color: #f9fbff;
             transition: .15s;
+        }
+
+        /* PAST: greyed out */
+        .booking-past {
+            color: #6c757d;
+            opacity: .65;
+        }
+
+        /* ONGOING: soft highlight (optional) */
+        .booking-now {
+            background: #fff8e1;
         }
     </style>
 }
